@@ -1,15 +1,17 @@
 import requests
 
+# Access token we can intercept from Delta
+# TODO: Figure out how to use refresh_token to automatically refresh access_token
+with open(".env", "r") as file:
+    conf = {line.split("=")[0]: line.split("=")[1] for line in file.read().split("\n") if line != ''}
+
 s = requests.Session()
 
 API_URL = 'https://www.googleapis.com/drive/v3/files'
 
-# Access token we can intercept from Delta
-access_token = "ya29.a0AfB_byBAa2hl6rljEzfyWktsCf_74Akxzt-7rz7FVR4HUeOPjNUOQVBXZBwEYYTomRu48Y4TDFct9I-wwHCuhnpXEQrvKj-LqOD51fOZ1fwRn9v2IUpkplRSxGg2lYqLURxadpD58waqz4Il0WWBhn5bB52dh-W5u8bxErTlaCgYKAckSARMSFQHsvYlspEr10vw-iu7rQojfk_0zZw0175"
-
 # Might as well be a good internet samaritan
 headers = {
-        'authorization': f'Bearer {access_token}',
+        'authorization': f'Bearer {conf["ACCESS_TOKEN"]}',
         'user-agent': 'emusync 0.0.0',
 }
 s.headers.update(headers)
