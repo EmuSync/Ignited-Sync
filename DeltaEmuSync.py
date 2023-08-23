@@ -37,7 +37,11 @@ class DeltaEmuSync:
             'gpsdk': 'gid-5.0.2',
             'grant_type': 'refresh_token'
          }
-        refdata = self.session.post(self.REAUTH_URL, data=data).json()
+        response = self.session.post(self.REAUTH_URL, data=data)
+        if response.status_code != 200:
+            raise EnvironmentError("Could not refresh token! Status: {response.status_code}"
+                                   " Reason: {response.reason}")
+        refdata = response.json()
         self.__access_tok = refdata['access_token']
         self.__id_tok = refdata['id_token']
         self._scope = refdata['scope']
@@ -77,9 +81,7 @@ class DeltaEmuSync:
             print("Refreshing token..")
             self.refresh_token()
             response = self.session.get(self.API_URL, params=params)
-            if response.status_code > 250:
-                raise EnvironmentError("Could not refresh token, response: {response.status_code}"
-                                       " Reason: {response.reason}")
+
         return response.json()['files']
 
     def download_file(self, file_id: str) -> bytes:
