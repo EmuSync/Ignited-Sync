@@ -83,7 +83,7 @@ class DeltaEmuSync:
         return response.json()['files']
 
     def download_file(self, file_id: str) -> bytes:
-        return s.get(self.API_URL + f"/{file_id}", params={'alt':'media'}).content
+        return self.session.get(self.API_URL + f"/{file_id}", params={'alt':'media'}).content
 
     @property
     def files(self) -> list[dict]:
