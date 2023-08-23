@@ -7,6 +7,8 @@ class DeltaEmuSync:
     CLIENT_ID = '457607414709-7oc45nq59frd7rre6okq22fafftd55g1.apps.googleusercontent.com'
     def __init__(self, conf: dict = None):
         self._files = []
+        self.session = requests.Session()
+        self.session.headers.update({'user-agent': 'emusync 0.0.0'})
 
         if conf is None:
             with open(".deltasync", "r") as file:
@@ -24,8 +26,6 @@ class DeltaEmuSync:
         except KeyError:
             self.refresh_token()
 
-        self.session = requests.Session()
-        self.session.headers.update({'user-agent': 'emusync 0.0.0'})
         self.session.headers.update({"authorization": f"Bearer {self.__access_tok}"})
 
     def refresh_token(self) -> bool:
