@@ -4,6 +4,7 @@ import requests
 class DeltaEmuSync:
     REAUTH_URL = 'https://oauth2.googleapis.com/token'
     API_URL = 'https://www.googleapis.com/drive/v3/files'
+    CLIENT_ID = '457607414709-7oc45nq59frd7rre6okq22fafftd55g1.apps.googleusercontent.com'
     def __init__(self, conf: dict = None):
         self._files = []
 
@@ -12,10 +13,16 @@ class DeltaEmuSync:
                 conf = {line.split("=")[0]: line.split("=")[1] for line in file.read().split("\n") if line != ''}
 
         self.__refresh_tok = conf['REFRESH_TOKEN']
-        self.__access_tok = conf['ACCESS_TOKEN']
-        self.__id_tok = conf['ID_TOKEN']
-        self._client_id = conf['CLIENT_ID']
-        self._scope = conf['SCOPE']
+        try:
+            self._client_id = conf['CLIENT_ID']
+        except KeyError:
+            self._client_id = self.CLIENT_ID
+        try:
+            self.__access_tok = conf['ACCESS_TOKEN']
+            self.__id_tok = conf['ID_TOKEN']
+            self._scope = conf['SCOPE']
+        except KeyError:
+            self.refresh_token()
 
         self.session = requests.Session()
         self.session.headers.update({'user-agent': 'emusync 0.0.0'})
