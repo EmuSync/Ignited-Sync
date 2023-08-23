@@ -1,0 +1,5 @@
+ACCESS_TOKEN=<access_token>
+REFRESH_TOKEN=<refresh_token>
+ID_TOKEN=<id_token>
+CLIENT_ID=457607414709-7oc45nq59frd7rre6okq22fafftd55g1.apps.googleusercontent.com
+SCOPE=https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid
