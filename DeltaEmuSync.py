@@ -2,6 +2,7 @@ import requests
 
 
 class DeltaEmuSync:
+    __slots__ = ("_files", "session", "__refresh_tok", "_client_id", "__access_tok", "__id_tok", "_scope")
     REAUTH_URL = 'https://oauth2.googleapis.com/token'
     API_URL = 'https://www.googleapis.com/drive/v3/files'
     CLIENT_ID = '457607414709-7oc45nq59frd7rre6okq22fafftd55g1.apps.googleusercontent.com'
