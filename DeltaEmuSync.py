@@ -5,6 +5,7 @@ class DeltaEmuSync:
     __slots__ = ("_files", "session", "__refresh_tok", "_client_id", "__access_tok", "__id_tok", "_scope")
     REAUTH_URL = 'https://oauth2.googleapis.com/token'
     API_URL = 'https://www.googleapis.com/drive/v3/files'
+    UPLOAD_URL = 'https://www.googleapis.com/upload/drive/v3/files'
     CLIENT_ID = '457607414709-7oc45nq59frd7rre6okq22fafftd55g1.apps.googleusercontent.com'
     def __init__(self, conf: dict = None):
         self._files = []
@@ -84,6 +85,18 @@ class DeltaEmuSync:
             response = self.session.get(self.API_URL, params=params)
 
         return response.json()['files']
+
+    def upload_file(self, name: str, data: bytes, harm_obj: dict = None) -> str:
+        params = {"uploadType": "multipart"}
+        meta = {"name": name, "parents": ["appDataFolder"]}
+        files = {"file": data}
+
+        if harm_obj:
+            meta['appProperties'] = harm_obj
+
+        files["data"] = ("metadata", json.dumps(meta), "application/json; charset=UTF-8")
+
+        return self.session.post(self.UPLOAD_URL, params=params, files=files)
 
     def download_file(self, file_id: str) -> bytes:
         return self.session.get(self.API_URL + f"/{file_id}", params={'alt':'media'}).content
