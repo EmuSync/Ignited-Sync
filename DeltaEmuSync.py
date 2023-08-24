@@ -86,13 +86,13 @@ class DeltaEmuSync:
 
         return response.json()['files']
 
-    def upload_file(self, name: str, data: bytes, harm_obj: dict = None) -> str:
+    def upload_file(self, name: str, data: bytes, props: dict = None) -> str:
         params = {"uploadType": "multipart"}
         meta = {"name": name, "parents": ["appDataFolder"]}
         files = {"file": data}
 
         if harm_obj:
-            meta['appProperties'] = harm_obj
+            meta['appProperties'] = props
 
         files["data"] = ("metadata", json.dumps(meta), "application/json; charset=UTF-8")
 
