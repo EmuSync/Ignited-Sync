@@ -101,83 +101,11 @@ class DeltaEmuSync:
     def download_file(self, file_id: str) -> bytes:
         return self.session.get(self.API_URL + f"/{file_id}", params={'alt':'media'}).content
 
-    def decode_file(self, file: dict) -> dict:
-        if 'appProperties' not in file:
-            return file
-
-        props = file.pop('appProperties')
-        for item in props.items():
-            match item:
-                case ('harmony_recordedObjectType', ot):
-                    file['objType'] = ot
-                case ('gameName', gn):
-                    file['gameName'] = gn
-                case ('gameID', gi):
-                    file['gameID'] = gi
-                case ('harmony_localizedName', ln):
-                    file['localizedName'] = ln
-                case ('coreID', ci):
-                    file['coreID'] = ci
-                case ('harmony_recordedObjectIdentifier', oi):
-                    file['objID'] = oi
-                case ('harmony_sha1Hash', h):
-                    file['sha1hash'] = h
-                case ('harmony_relationshipIdentifier', t):
-                    file['harmonyType'] = t
-                case ('harmony_author', ha):
-                    file['author'] = ha
-
-        return file
-
-    def encode_file(self, file_copy: dict):
-        file = file_copy.copy()
-        items_pop = ['objType', 'gameName', 'gameID', 'localizedName', 'coreID', 'sha1hash', 'harmonyType', 'author']
-        props = {}
-        for item in list(file_copy.items()):
-            match item:
-                case ('objType', ot):
-                    props.update({'harmony_recordedObjectType': ot})
-                    continue
-                case ('gameName', gn):
-                    props.update({'gameName': gn})
-                    continue
-                case ('gameID', gi):
-                    props.update({'gameID': gi})
-                    continue
-                case ('localizedName', ln):
-                    props.update({'harmony_localizedName': ln})
-                    continue
-                case ('coreID', ci):
-                    props.update({'coreID': ci})
-                    continue
-                case ('objID', oi):
-                    props.update({'harmony_recordedObjectIdentifier': oi})
-                    continue
-                case ('sha1hash', h):
-                    props.update({'harmony_sha1Hash': h})
-                    continue
-                case ('harmonyType', t):
-                    props.update({'harmony_relationshipIdentifier': t})
-                    continue
-                case ('author', ha):
-                    props.update({'harmony_author': ha})
-                    continue
-                case _:
-                    continue
-        else:
-            for i in items_pop:
-                try:
-                    file.pop(i)
-                except KeyError:
-                    pass
-            file.update({'appProperties': props})
-            return file
-
     @property
     def files(self) -> list[dict]:
         # TODO: Actual file caching
         if len(self._files) == 0:
-            self._files = [self.decode_file(f) for f in self.search_file()]
+            self._files = [f for f in self.search_file()]
         return self._files
 
 
