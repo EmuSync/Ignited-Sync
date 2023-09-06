@@ -1,7 +1,11 @@
+'''DeltaEmuSync - A module to interact with Delta's Google Drive Harmony files
+'''
 import requests
 
 
 class DeltaEmuSync:
+    '''DeltaEmuSync - A class to imitate Delta so we can download/upload emulator files to Delta Sync
+    '''
     __slots__ = ("_files", "session", "__refresh_tok", "_client_id", "__access_tok", "__id_tok", "_scope")
     REAUTH_URL = 'https://oauth2.googleapis.com/token'
     API_URL = 'https://www.googleapis.com/drive/v3/files'
@@ -31,6 +35,7 @@ class DeltaEmuSync:
         self.session.headers.update({"authorization": f"Bearer {self.__access_tok}"})
 
     def refresh_token(self) -> bool:
+        '''Refreshes our access token to the Google Drive API'''
         data = {
             'refresh_token': self.__refresh_tok,
             'emm_support': 1,
@@ -59,6 +64,8 @@ class DeltaEmuSync:
         return True
 
     def search_file(self, query: str = None, fields: str = None, page_size: int = 1000) -> list[dict]:
+        '''Searches for files on Google Drive
+        '''
         if query is None:
             query = "'appDataFolder' in parents"
         else:
@@ -99,10 +106,12 @@ class DeltaEmuSync:
         return self.session.post(self.UPLOAD_URL, params=params, files=files)
 
     def download_file(self, file_id: str) -> bytes:
+        '''Downloads the specified `file_id` from Google Drive, returns a bytes object representing the files' contents'''
         return self.session.get(self.API_URL + f"/{file_id}", params={'alt':'media'}).content
 
     @property
     def files(self) -> list[dict]:
+        '''List of files returned by the Google Drive API, will have a caching system'''
         # TODO: Actual file caching
         if len(self._files) == 0:
             self._files = [f for f in self.search_file()]
