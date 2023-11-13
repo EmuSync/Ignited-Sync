@@ -1,6 +1,72 @@
+import arrow
 import requests
+from arrow import Arrow
 from typing import Optional
+from dataclasses import dataclass, field
 
+
+@dataclass
+class Properties:
+    sha1hash: str
+    relationship_id: Optional[str] = None
+    author: Optional[str] = None
+    localized_name: Optional[str] = None
+    game_name: Optional[str] = None
+    game_id: Optional[str] = None
+    object_id: Optional[str] = None
+    object_type: Optional[str] = None
+    previous_date: Optional[Arrow] = None
+    previous_id: Optional[str] = None
+    core_id: Optional[str] = None
+
+    @classmethod
+    def from_api(cls, data: dict):
+        return cls(
+                data['harmony_sha1Hash'],
+                data.get('harmony_relationshipIdentifier', None),
+                data.get('harmony_author', None),
+                data.get('harmony_localizedName', None),
+                data.get('gameName', None),
+                data.get('gameID', None),
+                data.get('harmony_recordedObjectIdentifier', None),
+                data.get('harmony_recordedObjectType', None),
+                data.get('harmony_previousVersionDate', None),
+                data.get('harmony_previousVersionIdentifier', None),
+                data.get('coreID', None)
+               )
+
+
+@dataclass
+class GFile:
+    id: str
+    name: str
+    size: int
+    modified: Arrow
+    mime: str
+    head_rev_id: str
+    properties: Properties
+    api: Optional['GDAPI'] = field(repr=False, default=None)
+
+    @classmethod
+    def from_api(cls, data: dict, api: Optional['GDAPI'] = None):
+        return cls(
+                data['id'],
+                data['name'],
+                int(data['size']),
+                arrow.get(data['modifiedTime']),
+                data['mimeType'],
+                data['headRevisionId'],
+                Properties.from_api(data['appProperties']),
+                api
+               )
+
+    def download(self, session: Optional['GDAPI'] = None) -> bytes:
+        "Download this files' bytes"
+        if self.api is None:
+            if session is None:
+                raise Exception("Need an API session to download this file!")
+            return session.download_file(self.id)
+        return self.api.download_file(self.id)
 
 class GDAPIConf:
     REAUTH_URL = 'https://oauth2.googleapis.com/token'
@@ -61,7 +127,7 @@ class GDAPIConf:
         return r
 
 
-class DeltaGDAPI:
+class GDAPI:
     API_URL = 'https://www.googleapis.com/drive/v3/files'
     UPLOAD_URL = 'https://www.googleapis.com/upload/drive/v3/files'
     def __init__(self, conf: GDAPIConf):
@@ -105,15 +171,15 @@ class DeltaGDAPI:
         return self.session.get(self.API_URL + f"/{file_id}", params={'alt':'media'}).content
 
     @property
-    def files(self) -> list[dict]:
+    def files(self) -> list[GFile]:
         '''List of files returned by the Google Drive API, will have a caching system'''
         # TODO: Actual file caching
         if len(self._files) == 0:
-            self._files = [f for f in self.search_file()]
+            self._files = [GFile.from_api(f, self) for f in self.search_file()]
         return self._files
 
 
 if __name__ == '__main__':
-    dapi = DeltaGDAPI(GDAPIConf.from_conf())
+    dapi = GDAPI(GDAPIConf.from_conf())
     print(len(dapi.files))
 
