@@ -178,26 +178,30 @@ class GDAPI:
         return self._files
     
     def searchJsonFile(self, data, searchforid: str, inputValue: str):
-        for i in data:
-                if i['id'] == searchforid:
-                    #print(i[inputValue])
-                    return i[inputValue]
+        return getattr([file for file in data if file.id == searchforid][0], inputValue)
 
     def downloadRequestedFile(self, id, filePath):
         print(self) # get past argument error even if self is gone
         
-        fileNameFromJson = dapi.searchJsonFile(dapi.files, id, "mimeType").replace("/",".")
+        fileNameFromJson = dapi.searchJsonFile(self.files, id, "name")
+
+        if dapi.searchJsonFile(self.files, id, "mime") == "image/png":
+            fileNameFromJson = fileNameFromJson.replace("-thumbnail","") # Needs to be hooked to program in some way to assign it to a thumbnail
+            fileNameFromJson = fileNameFromJson.replace("SaveState-","") # What type file its assigned to.
+            fileNameFromJson = fileNameFromJson + ".png"
+
+
         print("getting Details for ",fileNameFromJson)
         fullPath = filePath + "/" + fileNameFromJson
-        fileModTime = dapi.searchJsonFile(dapi.files, id, "modifiedTime")
+        fileModTime = self.searchJsonFile(self.files, id, "modified")
         #properties = ds.searchJsonFile(ds.files, id, "appProperties")
-                
-        convertToUnixTime = datetime.datetime.strptime(fileModTime.replace("T"," ").replace("Z",""),"%Y-%m-%d %H:%M:%S.%f").timestamp()
+        convertToUnixTime = float(arrow.get(fileModTime).timestamp()) 
+        #convertToUnixTime = datetime.datetime.strptime(fileModTime.replace("T"," ").replace("Z",""),"%Y-%m-%d %H:%M:%S.%f").timestamp()
         print("Downloaded Modified TimeStamp:", convertToUnixTime)
         print("Downloading File: ",fileNameFromJson)
 
         # TODO: Add sha1hash verification
-        DWfile = dapi.download_file(id)
+        DWfile = self.download_file(id)
 
         
         print("finished: ", fileNameFromJson)
@@ -212,7 +216,7 @@ if __name__ == '__main__':
     dapi = GDAPI(GDAPIConf.from_conf())
     print(len(dapi.files))
     print(type(dapi.files))
-    print(dapi.files[1])
+    print(dapi.files)
 
     # Downloads file via id and tells were to download
     dapi.downloadRequestedFile("1SsYTjZbvetM3ZB8QNz84HO5S48iLcWDgd_ONaldId2b4jRlrfg", "/run/media/deck/5b860f23-1efd-4ba5-8336-603c1dde8b94/git/Delta-Reversing/sync")
