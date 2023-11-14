@@ -1,5 +1,4 @@
-import arrow
-import requests
+import arrow, requests, datetime, os
 from arrow import Arrow
 from typing import Optional
 from dataclasses import dataclass, field
@@ -68,14 +67,6 @@ class GFile:
             return session.download_file(self.id)
         return self.api.download_file(self.id)
 
-    def delete(self, session: Optional['GDAPI'] = None):
-        if self.api is None:
-            if session is None:
-                raise Exception("Need an API session to download this file!")
-            return session.delete_file(self.id)
-        return self.api.delete_file(self.id)
-
-
 class GDAPIConf:
     REAUTH_URL = 'https://oauth2.googleapis.com/token'
     CLIENT_ID = '457607414709-7oc45nq59frd7rre6okq22fafftd55g1.apps.googleusercontent.com'
@@ -119,11 +110,8 @@ class GDAPIConf:
             conf.writelines([
                 f"REFRESH_TOKEN={self.refresh_token}",
                 f"ACCESS_TOKEN={self.access_token}",
-                "\n",
                 f"ID_TOKEN={self.id_token}",
-                "\n",
                 f"CLIENT_ID={self.CLIENT_ID}",
-                "\n",
                 f"SCOPE={self.scope}",
             ])
 
@@ -181,9 +169,6 @@ class GDAPI:
         "Downloads the specified `file_id` from Google Drive, returns a bytes object representing the files' contents"
         return self.session.get(self.API_URL + f"/{file_id}", params={'alt':'media'}).content
 
-    def delete_file(self, file_id: str):
-        return self.session.delete(self.API_URL + f"/{file_id}")
-
     @property
     def files(self) -> list[GFile]:
         '''List of files returned by the Google Drive API, will have a caching system'''
@@ -191,9 +176,44 @@ class GDAPI:
         if len(self._files) == 0:
             self._files = [GFile.from_api(f, self) for f in self.search_file()]
         return self._files
+    
+    def searchJsonFile(self, data, searchforid: str, inputValue: str):
+        for i in data:
+                if i['id'] == searchforid:
+                    #print(i[inputValue])
+                    return i[inputValue]
+
+    def downloadRequestedFile(self, id, filePath):
+        print(self) # get past argument error even if self is gone
+        
+        fileNameFromJson = dapi.searchJsonFile(dapi.files, id, "mimeType").replace("/",".")
+        print("getting Details for ",fileNameFromJson)
+        fullPath = filePath + "/" + fileNameFromJson
+        fileModTime = dapi.searchJsonFile(dapi.files, id, "modifiedTime")
+        #properties = ds.searchJsonFile(ds.files, id, "appProperties")
+                
+        convertToUnixTime = datetime.datetime.strptime(fileModTime.replace("T"," ").replace("Z",""),"%Y-%m-%d %H:%M:%S.%f").timestamp()
+        print("Downloaded Modified TimeStamp:", convertToUnixTime)
+        print("Downloading File: ",fileNameFromJson)
+
+        # TODO: Add sha1hash verification
+        DWfile = dapi.download_file(id)
+
+        
+        print("finished: ", fileNameFromJson)
+
+        with open(fullPath, 'wb') as file:
+            file.write(DWfile)
+            os.utime(fullPath,(convertToUnixTime,convertToUnixTime))
+            print("File Written to: ", fullPath)
 
 
 if __name__ == '__main__':
     dapi = GDAPI(GDAPIConf.from_conf())
     print(len(dapi.files))
+    print(type(dapi.files))
+    print(dapi.files[1])
+
+    # Downloads file via id and tells were to download
+    dapi.downloadRequestedFile("1SsYTjZbvetM3ZB8QNz84HO5S48iLcWDgd_ONaldId2b4jRlrfg", "/run/media/deck/5b860f23-1efd-4ba5-8336-603c1dde8b94/git/Delta-Reversing/sync")
 
