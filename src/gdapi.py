@@ -68,6 +68,14 @@ class GFile:
             return session.download_file(self.id)
         return self.api.download_file(self.id)
 
+    def delete(self, session: Optional['GDAPI'] = None):
+        if self.api is None:
+            if session is None:
+                raise Exception("Need an API session to download this file!")
+            return session.delete_file(self.id)
+        return self.api.delete_file(self.id)
+
+
 class GDAPIConf:
     REAUTH_URL = 'https://oauth2.googleapis.com/token'
     CLIENT_ID = '457607414709-7oc45nq59frd7rre6okq22fafftd55g1.apps.googleusercontent.com'
@@ -172,6 +180,9 @@ class GDAPI:
     def download_file(self, file_id: str) -> bytes:
         "Downloads the specified `file_id` from Google Drive, returns a bytes object representing the files' contents"
         return self.session.get(self.API_URL + f"/{file_id}", params={'alt':'media'}).content
+
+    def delete_file(self, file_id: str):
+        return self.session.delete(self.API_URL + f"/{file_id}")
 
     @property
     def files(self) -> list[GFile]:
