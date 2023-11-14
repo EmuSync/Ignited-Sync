@@ -111,8 +111,11 @@ class GDAPIConf:
             conf.writelines([
                 f"REFRESH_TOKEN={self.refresh_token}",
                 f"ACCESS_TOKEN={self.access_token}",
+                "\n",
                 f"ID_TOKEN={self.id_token}",
+                "\n",
                 f"CLIENT_ID={self.CLIENT_ID}",
+                "\n",
                 f"SCOPE={self.scope}",
             ])
 
